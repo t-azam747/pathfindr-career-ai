@@ -1,12 +1,16 @@
 import { Button } from "@/components/ui/button";
-import { BrainCircuit, Menu, X } from "lucide-react";
+import { BrainCircuit, Menu, X, LogOut } from "lucide-react";
 import { useState } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import ThemeToggle from "@/components/ui/theme-toggle";
+import { useAuth } from "@/hooks/useAuth";
+import { toast } from "sonner";
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
+  const { user, signOut, loading } = useAuth();
 
   const navigation = [
     { name: "Home", href: "/" },
@@ -17,6 +21,16 @@ const Header = () => {
   ];
 
   const isActive = (path: string) => location.pathname === path;
+
+  const handleSignOut = async () => {
+    const { error } = await signOut();
+    if (error) {
+      toast.error('Failed to sign out');
+    } else {
+      toast.success('Signed out successfully');
+      navigate('/');
+    }
+  };
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-lg border-b border-border">
@@ -52,12 +66,30 @@ const Header = () => {
           {/* CTA Button */}
           <div className="hidden md:flex items-center space-x-4">
             <ThemeToggle />
-            <Button variant="outline" size="sm">
-              Sign In
-            </Button>
-            <Button variant="default" size="sm" className="gradient-primary">
-              Get Started
-            </Button>
+            {loading ? null : user ? (
+              <div className="flex items-center space-x-2">
+                <span className="text-sm text-muted-foreground">
+                  Welcome, {user.user_metadata?.display_name || user.email}
+                </span>
+                <Button variant="outline" size="sm" onClick={handleSignOut}>
+                  <LogOut className="w-4 h-4 mr-1" />
+                  Sign Out
+                </Button>
+              </div>
+            ) : (
+              <>
+                <Link to="/auth">
+                  <Button variant="outline" size="sm">
+                    Sign In
+                  </Button>
+                </Link>
+                <Link to="/auth">
+                  <Button variant="default" size="sm" className="gradient-primary">
+                    Get Started
+                  </Button>
+                </Link>
+              </>
+            )}
           </div>
 
           {/* Mobile menu button */}
@@ -91,12 +123,30 @@ const Header = () => {
                 <div className="flex justify-center pb-2">
                   <ThemeToggle />
                 </div>
-                <Button variant="outline" size="sm">
-                  Sign In
-                </Button>
-                <Button variant="default" size="sm" className="gradient-primary">
-                  Get Started
-                </Button>
+                {loading ? null : user ? (
+                  <div className="space-y-2">
+                    <div className="text-center text-sm text-muted-foreground px-4">
+                      Welcome, {user.user_metadata?.display_name || user.email}
+                    </div>
+                    <Button variant="outline" size="sm" onClick={handleSignOut}>
+                      <LogOut className="w-4 h-4 mr-1" />
+                      Sign Out
+                    </Button>
+                  </div>
+                ) : (
+                  <>
+                    <Link to="/auth">
+                      <Button variant="outline" size="sm" className="w-full">
+                        Sign In
+                      </Button>
+                    </Link>
+                    <Link to="/auth">
+                      <Button variant="default" size="sm" className="gradient-primary w-full">
+                        Get Started
+                      </Button>
+                    </Link>
+                  </>
+                )}
               </div>
             </nav>
           </div>
